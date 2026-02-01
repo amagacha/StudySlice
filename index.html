@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8">
+  <title>StudySlice</title>
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+<h1>📘 StudySlice</h1>
+
+<div class="card">
+  <input id="username" placeholder="ユーザー名">
+  <button onclick="login()">ログイン</button>
+  <p id="userLabel"></p>
+</div>
+
+<div class="card">
+  <h2>⏱ ストップウォッチ</h2>
+  <p id="watch">00:00</p>
+  <button onclick="startWatch()">開始</button>
+  <button onclick="stopWatch()">停止</button>
+  <button onclick="resetWatch()">リセット</button>
+</div>
+
+<div class="card">
+  <input id="subject" placeholder="科目">
+  <input id="time" type="number" placeholder="分">
+  <button id="addBtn">記録</button>
+</div>
+
+<div class="card">
+  <h2>🤖 AI学習アドバイス</h2>
+  <button onclick="generateAdvice()">生成</button>
+  <p id="advice"></p>
+</div>
+
+<div class="card">
+  <h2>📊 学習グラフ</h2>
+  <canvas id="chart" width="300" height="200"></canvas>
+</div>
+
+<div class="card">
+  <h2>📅 勉強ログ</h2>
+  <ul id="logList"></ul>
+  <p id="totalTime"></p>
+  <button id="resetBtn">全リセット</button>
+</div>
+
+<script src="js/storage.js"></script>
+<script src="js/auth.js"></script>
+<script src="js/stopwatch.js"></script>
+<script src="js/chart.js"></script>
+<script src="js/ai.js"></script>
+<script src="js/main.js"></script>
+
+</body>
+</html>
