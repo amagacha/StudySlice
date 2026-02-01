@@ -3,18 +3,70 @@
 <head>
   <meta charset="UTF-8">
   <title>StudySlice</title>
-  <link rel="stylesheet" href="css/style.css">
+
+  <!-- ===== CSS（直書き） ===== -->
+  <style>
+    body {
+      font-family: sans-serif;
+      background: #f4f4f4;
+      padding: 20px;
+    }
+
+    h1 {
+      text-align: center;
+    }
+
+    .card {
+      background: white;
+      padding: 15px;
+      margin: 15px auto;
+      max-width: 420px;
+      border-radius: 8px;
+    }
+
+    input, button {
+      width: 100%;
+      margin-top: 6px;
+      padding: 8px;
+      box-sizing: border-box;
+    }
+
+    button {
+      background: #4CAF50;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    #watch {
+      font-size: 32px;
+      text-align: center;
+    }
+
+    ul {
+      padding-left: 0;
+    }
+
+    li {
+      list-style: none;
+      margin-bottom: 4px;
+    }
+  </style>
 </head>
+
 <body>
 
 <h1>📘 StudySlice</h1>
 
+<!-- ログイン -->
 <div class="card">
   <input id="username" placeholder="ユーザー名">
   <button onclick="login()">ログイン</button>
   <p id="userLabel"></p>
 </div>
 
+<!-- ストップウォッチ -->
 <div class="card">
   <h2>⏱ ストップウォッチ</h2>
   <p id="watch">00:00</p>
@@ -23,36 +75,168 @@
   <button onclick="resetWatch()">リセット</button>
 </div>
 
+<!-- 勉強入力 -->
 <div class="card">
   <input id="subject" placeholder="科目">
   <input id="time" type="number" placeholder="分">
-  <button id="addBtn">記録</button>
+  <button onclick="addLog()">記録</button>
 </div>
 
+<!-- AI -->
 <div class="card">
   <h2>🤖 AI学習アドバイス</h2>
   <button onclick="generateAdvice()">生成</button>
   <p id="advice"></p>
 </div>
 
+<!-- グラフ -->
 <div class="card">
   <h2>📊 学習グラフ</h2>
   <canvas id="chart" width="300" height="200"></canvas>
 </div>
 
+<!-- ログ -->
 <div class="card">
   <h2>📅 勉強ログ</h2>
   <ul id="logList"></ul>
   <p id="totalTime"></p>
-  <button id="resetBtn">全リセット</button>
+  <button onclick="resetLogs()">全リセット</button>
 </div>
 
-<script src="js/storage.js"></script>
-<script src="js/auth.js"></script>
-<script src="js/stopwatch.js"></script>
-<script src="js/chart.js"></script>
-<script src="js/ai.js"></script>
-<script src="js/main.js"></script>
+<!-- ===== JavaScript（直書き） ===== -->
+<script>
+  /* ---------- ログ保存 ---------- */
+  function getLogs() {
+    return JSON.parse(localStorage.getItem("logs")) || [];
+  }
+
+  function saveLog(log) {
+    const logs = getLogs();
+    logs.push(log);
+    localStorage.setItem("logs", JSON.stringify(logs));
+  }
+
+  function clearLogs() {
+    localStorage.removeItem("logs");
+  }
+
+  /* ---------- ログイン ---------- */
+  function login() {
+    const name = document.getElementById("username").value;
+    localStorage.setItem("user", name);
+    document.getElementById("userLabel").textContent = "👤 " + name;
+  }
+
+  const savedUser = localStorage.getItem("user");
+  if (savedUser) {
+    document.getElementById("userLabel").textContent = "👤 " + savedUser;
+  }
+
+  /* ---------- ストップウォッチ ---------- */
+  let seconds = 0;
+  let timer = null;
+
+  function updateWatch() {
+    const m = String(Math.floor(seconds / 60)).padStart(2, "0");
+    const s = String(seconds % 60).padStart(2, "0");
+    document.getElementById("watch").textContent = m + ":" + s;
+  }
+
+  function startWatch() {
+    if (timer) return;
+    timer = setInterval(() => {
+      seconds++;
+      updateWatch();
+    }, 1000);
+  }
+
+  function stopWatch() {
+    clearInterval(timer);
+    timer = null;
+  }
+
+  function resetWatch() {
+    stopWatch();
+    seconds = 0;
+    updateWatch();
+  }
+
+  /* ---------- 勉強ログ ---------- */
+  function addLog() {
+    const subject = document.getElementById("subject").value;
+    const time = Number(document.getElementById("time").value);
+
+    if (!subject || time <= 0) return;
+
+    saveLog({
+      subject,
+      time,
+      date: new Date().toLocaleDateString()
+    });
+
+    document.getElementById("subject").value = "";
+    document.getElementById("time").value = "";
+
+    render();
+  }
+
+  function resetLogs() {
+    clearLogs();
+    render();
+  }
+
+  /* ---------- AI ---------- */
+  function generateAdvice() {
+    const logs = getLogs();
+    const total = logs.reduce((s, l) => s + l.time, 0);
+
+    let msg = "少しずつでOK";
+    if (total > 300) msg = "いいペース！";
+    if (total > 600) msg = "努力量が異常、天才";
+
+    document.getElementById("advice").textContent = msg;
+  }
+
+  /* ---------- グラフ ---------- */
+  function drawChart(logs) {
+    const canvas = document.getElementById("chart");
+    const ctx = canvas.getContext("2d");
+    ctx.clearRect(0, 0, 300, 200);
+
+    const totals = {};
+    logs.forEach(l => {
+      totals[l.date] = (totals[l.date] || 0) + l.time;
+    });
+
+    let i = 0;
+    Object.values(totals).forEach(v => {
+      ctx.fillRect(i * 40 + 10, 200 - v, 30, v);
+      i++;
+    });
+  }
+
+  /* ---------- 表示 ---------- */
+  function render() {
+    const logs = getLogs();
+    const list = document.getElementById("logList");
+    const totalEl = document.getElementById("totalTime");
+
+    list.innerHTML = "";
+    let total = 0;
+
+    logs.forEach(l => {
+      total += l.time;
+      const li = document.createElement("li");
+      li.textContent = `${l.date}｜${l.subject}：${l.time}分`;
+      list.appendChild(li);
+    });
+
+    totalEl.textContent = "合計：" + total + "分";
+    drawChart(logs);
+  }
+
+  render();
+</script>
 
 </body>
 </html>
